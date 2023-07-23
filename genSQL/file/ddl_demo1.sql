@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS rtdsp.demo1
 (
     CORPORATION varchar(3) COMMENT "表头_法人主体",
-    DAY_ID varchar(8) COMMENT "表头_批量日期",
+    DAY_DT varchar(8) COMMENT "表头_批量日期",
     FK_CMBRH_KEY varchar(9) COMMENT "机构号",
     CM_OPR_NO varchar(12) COMMENT "操作员号",
     CMTLR_DB_TIMESTAMP decimal(15,0) COMMENT "时间戳",
@@ -13,10 +13,9 @@ CREATE TABLE IF NOT EXISTS rtdsp.demo1
     CM_SEQ_NO varchar(3) COMMENT "柜员序号",
     FILLER varchar(8) COMMENT "FILLER"
 )
-PRIMARY KEY(CORPORATION,DAY_ID)
-PARTITION BY date_trunc('day', day_id)
-DISTRIBUTED BY HASH (CORPORATION,DAY_ID)
+PRIMARY KEY(CORPORATION,DAY_DT)
+DISTRIBUTED BY HASH (CORPORATION,DAY_DT)
 PROPERTIES(
-    "replication_num"="3",
+    "replication_num"="1",
     "partition_live_number" = "7"
 );

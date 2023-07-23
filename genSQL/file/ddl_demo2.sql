@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS rtdsp.demo2
 (
     CORPORATION varchar(3) COMMENT "表头_法人主体",
-    DAY_ID varchar(8) COMMENT "表头_批量日期",
+    DAY_ID date COMMENT "表头_批量日期",
     FK_CMBRH_KEY varchar(9) COMMENT "机构号",
     CM_OPR_NO varchar(12) COMMENT "操作员号",
     CMTLR_DB_TIMESTAMP decimal(15,0) COMMENT "时间戳",
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS rtdsp.demo2
     FILLER varchar(8) COMMENT "FILLER"
 )
 PRIMARY KEY(CORPORATION,DAY_ID)
-PARTITION BY date_trunc('day', day_id)
+PARTITION BY date_trunc('day', DAY_ID)
 DISTRIBUTED BY HASH (CORPORATION,DAY_ID)
 ORDER BY(FK_CMBRH_KEY)
 PROPERTIES(
