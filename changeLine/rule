@@ -1,0 +1,9 @@
+import os
+import re
+
+pattern = r'[^\, & ,]'
+
+content = 'a,b,c,"d\,ef"'
+
+result_split = re.split(pattern, content)
+print(result_split)
