@@ -3,11 +3,11 @@ import os
 import sys
 import math
 
-# 根据excel内容，生产starrocks语句
+# 根据excel内容，生成flinkDDL语句
 # 注意:单个文件单张表，表头 column|datatype|desc|pk|order
-# 如果表设置分区，那字段名固定为 DAY_ID，且需要设置为主键（维度表无需设置分区字段）
-# 执行语句：python genSRddl.py {source_directory} {sink_directory}
-# python3 genSRddl.py /Users/dongwei/coder/pythoner/justPython/genSQL/file /Users/dongwei/coder/pythoner/justPython/genSQL/file
+# 需要设置主键
+# 执行语句：python genFlinkSQL.py {source_directory} {sink_directory} {scan_url} {jdbc_url}
+# python3 genFlinkSQL.py /input /output 172.18.244.74:18030 172.18.244.74:19030
 
 args = sys.argv
 
@@ -41,9 +41,6 @@ def generate_ddl_from_excel(excel_file):
     primKeys = []
     orderKeys = []
 
-    # 是否分区
-    partitionFlag = False
-
     for i, row in df.iterrows():
         field_name = row['column']
         data_type = row['datatype']
@@ -59,14 +56,10 @@ def generate_ddl_from_excel(excel_file):
         
         if field_name == 'DAY_ID' or field_name == 'day_id':
             data_type = 'date'
-            partitionFlag = True
         
 
         # Create the DDL statement for the current field
-        if i == last_index:
-            ddl_statement = f"    {field_name} {data_type} COMMENT \"{field_desc}\""
-        else:
-            ddl_statement = f"    {field_name} {data_type} COMMENT \"{field_desc}\","
+        ddl_statement = f"    {field_name} {data_type} COMMENT \"{field_desc}\","
         ddl_statements.append(ddl_statement)
     
     # engineType = "olap"
@@ -74,23 +67,25 @@ def generate_ddl_from_excel(excel_file):
     primContent = ",".join(primKeys)
     orderContent = ",".join(orderKeys)
 
+    ddl_statements.append("    PRIMARY KEY(" + primContent + ") NOT ENFORCED")
+
     ddl_statements.append(")")
-    # ddl_statements.append("ENGINE=olap ") #默认是olap
-    ddl_statements.append("PRIMARY KEY(" + primContent + ")")
-    if partitionFlag:
-        ddl_statements.append("PARTITION BY date_trunc('day', DAY_ID)")
-    ddl_statements.append("DISTRIBUTED BY HASH (" + primContent + ")")
-    if len(orderContent) > 0:
-        ddl_statements.append("ORDER BY(" + orderContent + ")")
-    ddl_statements.append("PROPERTIES(\n" +
-    "    \"replication_num\"=\"3\",\n" + 
-    "    \"partition_live_number\" = \"7\"\n" + #保留最近一月数据、上月底、上年底的数据
-    ");")
+
+    ddl_statements.append("WITH(\n"
+    + "    'connector'='starrocks', \n"
+    + "    'scan-url'='" + args[3] + "', \n"
+    + "    'jdbc-url'='jdbc:mysql://" + args[4] + "', \n"
+    + "    'username'='root', \n"
+    + "    'password'='datacanvas', \n"
+    + "    'database-name'='rtdsp', \n"
+    + "    'table-name'='" + tableName + "' \n"
+   ");")
+
 
     "\n".join(ddl_statements)
 
     # 将 DDL 语句输出到文件
-    print("generate "+ tableName + " ddl sql ......")
+    print("generate "+ tableName + " flink sql ddl ......")
     output_file = output_directory + "/ddl_" + tableName + ".sql"
     with open(output_file, 'w') as f:
         for ddl_statement in ddl_statements:
