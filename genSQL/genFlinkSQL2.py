@@ -81,29 +81,43 @@ def generate_ddl_from_excel(excel_file):
 
     ddl_statements.append(")")
 
-    ddl_statements.append("WITH(\n"
-    + "    'connector'='starrocks', \n"
-    + "    'jdbc-url'='jdbc:mysql://" + args[3] + "', \n" 
-    + "    'scan-url'='" + args[4] + "', \n" # 读
-    + "    'load-url'='" + args[5] + "', \n" # 写
-    + "    'username'='root', \n"
-    + "    'password'='datacanvas', \n"
-    + "    'database-name'='rtdsp', \n"
-    + "    'table-name'='" + tableName + "' \n"
-    ");")
+    ddl_statements_upper = [item.upper() for item in ddl_statements]
 
-    "\n".join(ddl_statements)
+    if args[6] == 'starrocks':
+        ddl_statements_upper.append("WITH(\n"
+        + "    'connector'='starrocks', \n"
+        + "    'jdbc-url'='jdbc:mysql://" + args[3] + "', \n" 
+        + "    'scan-url'='" + args[4] + "', \n" # 读
+        + "    'load-url'='" + args[5] + "', \n" # 写
+        + "    'username'='root', \n"
+        + "    'password'='datacanvas', \n"
+        + "    'database-name'='rtdsp', \n"
+        + "    'table-name'='" + tableName + "' \n"
+        ");")
+    elif args[6] == 'kafka':
+        ddl_statements_upper.append("WITH(\n"
+        + "    'connector' = 'kafka',\n"
+        + "    'topic' = '" + tableName.replace('TBL','TPC') + "',\n"
+        + "    'properties.bootstrap.servers' = '172.18.244.74:9092,172.18.244.75:9092,172.18.244.76:9092',\n"
+        + "    'properties.group.id' = 'sqlGroup',\n"
+        + "    'scan.startup.mode' = 'earliest-offset',\n"
+        + "    'format' = 'json'\n"
+        ");")
+    else:
+        return
+
+    "\n".join(ddl_statements_upper)
 
     # 将 DDL 语句输出到文件
     print("generate " + tableName + " ddl sql ......")
     output_file = output_directory + "/flink_ddl_" + tableName + ".sql"
     with open(output_file, 'w') as f:
-        for ddl_statement in ddl_statements:
+        for ddl_statement in ddl_statements_upper:
             f.write(ddl_statement + '\n')
             print(ddl_statement)
     print("====== success generate " + tableName + " ddl sql ======\n")
 
-    return ddl_statements
+    return ddl_statements_upper
 
 
 if __name__ == "__main__":

@@ -82,23 +82,26 @@ def generate_ddl_from_excel(excel_file):
     ddl_statements.append("DISTRIBUTED BY HASH (" + primContent + ")")
     if len(orderContent) > 0:
         ddl_statements.append("ORDER BY(" + orderContent + ")")
-    ddl_statements.append("PROPERTIES(\n" +
+
+    ddl_statements_upper = [item.upper() for item in ddl_statements]
+
+    ddl_statements_upper.append("PROPERTIES(\n" +
     "    \"replication_num\"=\"3\",\n" + 
     "    \"partition_live_number\" = \"7\"\n" + #保留最近一月数据、上月底、上年底的数据
     ");")
 
-    "\n".join(ddl_statements)
+    "\n".join(ddl_statements_upper)
 
     # 将 DDL 语句输出到文件
     print("generate "+ tableName + " ddl sql ......")
     output_file = output_directory + "/ddl_" + tableName + ".sql"
     with open(output_file, 'w') as f:
-        for ddl_statement in ddl_statements:
+        for ddl_statement in ddl_statements_upper:
             f.write(ddl_statement + '\n')
             print(ddl_statement)
     print("====== success generate "+ tableName + " ddl sql ======\n")
 
-    return ddl_statements
+    return ddl_statements_upper
 
 
 if __name__ == "__main__":
