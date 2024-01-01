@@ -1,0 +1,7 @@
+pymysql >= 0.10.1
+sqlmodel
+sqlalchemy
+sqlacodegen
+mysql-connector-python
+pillow
+cryptography
