@@ -5,3 +5,4 @@ sqlacodegen
 mysql-connector-python
 pillow
 cryptography
+zstandard
